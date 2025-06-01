@@ -10,7 +10,12 @@ const server = http.createServer(app)
 // Configure CORS for Socket.IO
 const io = socketIo(server, {
   cors: {
-    origin: ["http://localhost:5173", "http://localhost:3000", "https://whatchardoing3.netlify.app"],
+    origin: [
+      "http://localhost:5173", 
+      "http://localhost:3000", 
+      "https://whatchardoing3.netlify.app",
+      "https://whatchardoing3-backend.onrender.com"
+    ],
     methods: ["GET", "POST"],
     credentials: true
   }
@@ -18,7 +23,12 @@ const io = socketIo(server, {
 
 // Enable CORS for Express
 app.use(cors({
-  origin: ["http://localhost:5173", "http://localhost:3000", "https://whatchardoing3.netlify.app"],
+  origin: [
+    "http://localhost:5173", 
+    "http://localhost:3000", 
+    "https://whatchardoing3.netlify.app",
+    "https://whatchardoing3-backend.onrender.com"
+  ],
   credentials: true
 }))
 app.use(express.json())
