@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts'
-import { format, isThursday, startOfDay, addWeeks, isAfter, isBefore } from 'date-fns'
+import { isThursday, isAfter } from 'date-fns'
 import { Vote, RotateCcw, Users, Clock } from 'lucide-react'
 import './App.css'
 
