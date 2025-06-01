@@ -29,9 +29,7 @@ export const useSocket = () => {
 
   useEffect(() => {
     // Connect to Socket.IO server
-    const serverUrl = process.env.NODE_ENV === 'production' 
-      ? window.location.origin 
-      : 'http://localhost:3001'
+    const serverUrl = import.meta.env.VITE_SOCKET_SERVER_URL || 'http://localhost:3001'
     
     const newSocket = io(serverUrl, {
       transports: ['websocket', 'polling']
