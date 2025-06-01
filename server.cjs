@@ -33,14 +33,23 @@ app.use(cors({
 }))
 app.use(express.json())
 
-// Serve static files from the dist directory in production
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, 'dist')))
-  
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'dist', 'index.html'))
+// Health check endpoint
+app.get('/', (req, res) => {
+  res.json({
+    status: 'ok',
+    message: 'WhatchaDoing3 Socket.IO Server',
+    timestamp: new Date().toISOString()
   })
-}
+})
+
+// API endpoint to get current poll state
+app.get('/api/poll', (req, res) => {
+  res.json({
+    pollData: pollState.pollData,
+    voterCount: pollState.voters.size,
+    resetTime: pollState.resetTime.getTime()
+  })
+})
 
 // Store current poll state in memory
 let pollState = {
