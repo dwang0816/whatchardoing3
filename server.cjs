@@ -10,14 +10,17 @@ const server = http.createServer(app)
 // Configure CORS for Socket.IO
 const io = socketIo(server, {
   cors: {
-    origin: ["http://localhost:5173", "http://localhost:3000", "https://your-netlify-domain.netlify.app"],
+    origin: ["http://localhost:5173", "http://localhost:3000", "https://whatchardoing3.netlify.app"],
     methods: ["GET", "POST"],
     credentials: true
   }
 })
 
 // Enable CORS for Express
-app.use(cors())
+app.use(cors({
+  origin: ["http://localhost:5173", "http://localhost:3000", "https://whatchardoing3.netlify.app"],
+  credentials: true
+}))
 app.use(express.json())
 
 // Serve static files from the dist directory in production
