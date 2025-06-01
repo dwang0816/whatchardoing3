@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "server": "node server.cjs",
     "start": "node server.cjs",
-    "dev:full": "npm run server"
+    "dev:full": "npm run server",
+    "railway-start": "node server.cjs"
   },
   "engines": {
     "node": ">=18.0.0"
