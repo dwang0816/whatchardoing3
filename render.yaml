@@ -6,4 +6,6 @@ services:
     startCommand: node server.cjs
     envVars:
       - key: NODE_ENV
-        value: production 
+        value: production
+      - key: SKIP_FRONTEND_BUILD
+        value: "true" 

@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "echo 'Skipping frontend build on server deployment'",
-    "build:frontend": "tsc -b && vite build",
+    "build": "tsc -b && vite build",
+    "build:server-only": "echo 'Skipping frontend build on server deployment'",
     "lint": "eslint .",
     "preview": "vite preview",
     "server": "node server.cjs",
