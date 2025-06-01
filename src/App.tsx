@@ -1,65 +1,30 @@
 import { useState, useEffect } from 'react'
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts'
-import { isThursday, isAfter } from 'date-fns'
-import { Vote, RotateCcw, Users, Clock } from 'lucide-react'
+import { Vote, RotateCcw, Users, Clock, Wifi, WifiOff } from 'lucide-react'
+import { useSocket } from './hooks/useSocket'
 import './App.css'
 
-interface PollData {
-  id: string
-  name: string
-  votes: number
-  color: string
-}
-
-const POLL_OPTIONS: PollData[] = [
-  { id: 'movie', name: 'Movie', votes: 0, color: '#8884d8' },
-  { id: 'game', name: 'Game', votes: 0, color: '#82ca9d' },
-  { id: 'friend-choose', name: 'Let Char choose', votes: 0, color: '#ffc658' }
-]
-
-// Function to get next Thursday midnight EST
-const getNextThursdayMidnightEST = (): Date => {
-  const now = new Date()
-  const easternTime = new Date(now.toLocaleString("en-US", {timeZone: "America/New_York"}))
-  
-  // Find next Thursday
-  let nextThursday = new Date(easternTime)
-  while (!isThursday(nextThursday) || !isAfter(nextThursday, easternTime)) {
-    nextThursday.setDate(nextThursday.getDate() + 1)
-  }
-  
-  // Set to midnight
-  nextThursday.setHours(0, 0, 0, 0)
-  
-  return nextThursday
-}
-
 function App() {
-  const [pollData, setPollData] = useState<PollData[]>(() => {
-    const saved = localStorage.getItem('pollData')
-    return saved ? JSON.parse(saved) : POLL_OPTIONS
-  })
-  
-  const [hasVoted, setHasVoted] = useState(() => {
-    return localStorage.getItem('hasVoted') === 'true'
-  })
-  
-  const [nextReset, setNextReset] = useState<Date>(getNextThursdayMidnightEST())
+  const { 
+    pollData, 
+    hasVoted, 
+    resetTime, 
+    isConnected, 
+    voterCount,
+    vote, 
+    resetPoll 
+  } = useSocket()
+
   const [timeUntilReset, setTimeUntilReset] = useState<string>('')
 
   // Update countdown timer
   useEffect(() => {
     const updateCountdown = () => {
       const now = new Date()
-      const diff = nextReset.getTime() - now.getTime()
+      const diff = resetTime.getTime() - now.getTime()
       
       if (diff <= 0) {
-        // Reset the poll
-        setPollData(POLL_OPTIONS)
-        setHasVoted(false)
-        localStorage.removeItem('hasVoted')
-        localStorage.removeItem('pollData')
-        setNextReset(getNextThursdayMidnightEST())
+        setTimeUntilReset('Resetting...')
         return
       }
       
@@ -75,36 +40,21 @@ function App() {
     const interval = setInterval(updateCountdown, 1000)
     
     return () => clearInterval(interval)
-  }, [nextReset])
-  
-  // Save poll data to localStorage
-  useEffect(() => {
-    localStorage.setItem('pollData', JSON.stringify(pollData))
-  }, [pollData])
+  }, [resetTime])
 
   const handleVote = (optionId: string) => {
-    if (hasVoted) return
-    
-    setPollData(prev => 
-      prev.map(option => 
-        option.id === optionId 
-          ? { ...option, votes: option.votes + 1 }
-          : option
-      )
-    )
-    
-    setHasVoted(true)
-    localStorage.setItem('hasVoted', 'true')
+    if (!hasVoted && isConnected) {
+      vote(optionId)
+    }
+  }
+
+  const handleReset = () => {
+    if (isConnected) {
+      resetPoll()
+    }
   }
 
   const totalVotes = pollData.reduce((sum, option) => sum + option.votes, 0)
-
-  const resetPoll = () => {
-    setPollData(POLL_OPTIONS)
-    setHasVoted(false)
-    localStorage.removeItem('hasVoted')
-    localStorage.removeItem('pollData')
-  }
 
   return (
     <div className="app">
@@ -113,11 +63,19 @@ function App() {
           <h1 className="title">
             <Vote className="title-icon" />
             What Char Doing? Poll
+            <span className={`connection-status ${isConnected ? 'connected' : 'disconnected'}`}>
+              {isConnected ? <Wifi size={20} /> : <WifiOff size={20} />}
+            </span>
           </h1>
           <div className="reset-info">
             <Clock className="clock-icon" />
             <span>Resets in: {timeUntilReset}</span>
-            <button onClick={resetPoll} className="reset-btn" title="Manual Reset">
+            <button 
+              onClick={handleReset} 
+              className="reset-btn" 
+              title="Manual Reset"
+              disabled={!isConnected}
+            >
               <RotateCcw size={16} />
             </button>
           </div>
@@ -128,6 +86,11 @@ function App() {
         <div className="poll-container">
           <div className="vote-section">
             <h2>Cast Your Vote!</h2>
+            {!isConnected && (
+              <div className="connection-warning">
+                ⚠️ Disconnected from server. Trying to reconnect...
+              </div>
+            )}
             <div className="vote-options">
               {pollData.map((option) => {
                 const percentage = totalVotes > 0 ? (option.votes / totalVotes * 100).toFixed(1) : '0'
@@ -135,9 +98,9 @@ function App() {
                 return (
                   <button
                     key={option.id}
-                    className={`vote-option ${hasVoted ? 'disabled' : ''}`}
+                    className={`vote-option ${hasVoted || !isConnected ? 'disabled' : ''}`}
                     onClick={() => handleVote(option.id)}
-                    disabled={hasVoted}
+                    disabled={hasVoted || !isConnected}
                     style={{ '--option-color': option.color } as React.CSSProperties}
                   >
                     <span className="option-name">{option.name}</span>
@@ -156,13 +119,14 @@ function App() {
             
             {hasVoted && (
               <div className="voted-message">
-                ✓ Thanks for voting! Results update in real-time.
+                ✓ Thanks for voting! Results update in real-time for everyone.
               </div>
             )}
             
             <div className="total-votes">
               <Users size={20} />
               <span>Total Votes: {totalVotes}</span>
+              <span className="voter-count">({voterCount} voters)</span>
             </div>
           </div>
 

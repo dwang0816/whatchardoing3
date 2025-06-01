@@ -317,3 +317,127 @@
   background: rgba(255, 255, 255, 0.5);
 }
 
+.connection-status {
+  margin-left: 0.75rem;
+  display: flex;
+  align-items: center;
+}
+
+.connection-status.connected {
+  color: #4CAF50;
+  animation: pulse 2s infinite;
+}
+
+.connection-status.disconnected {
+  color: #f44336;
+  animation: flash 1s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+
+@keyframes flash {
+  0% { opacity: 1; }
+  50% { opacity: 0.3; }
+  100% { opacity: 1; }
+}
+
+.connection-warning {
+  background: linear-gradient(45deg, #ff9800, #f57c00);
+  color: white;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  text-align: center;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3);
+  animation: slideIn 0.5s ease-out;
+}
+
+.voter-count {
+  opacity: 0.8;
+  font-size: 0.9rem;
+  margin-left: 0.5rem;
+}
+
+.reset-btn:disabled {
+  background: rgba(255, 255, 255, 0.1);
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.reset-btn:disabled:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: none;
+}
+
+.vote-option.disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.vote-option.disabled:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Real-time update animations */
+@keyframes voteUpdate {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
+.chart-container {
+  animation: slideIn 0.7s ease-out;
+}
+
+.vote-option {
+  animation: slideIn 0.5s ease-out;
+  transition: all 0.3s ease, background-color 0.5s ease;
+}
+
+.vote-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 4px;
+  background: var(--option-color);
+  transition: width 0.8s ease-in-out;
+  border-radius: 0 0 1rem 1rem;
+}
+
+/* Enhanced responsive design for real-time features */
+@media (max-width: 768px) {
+  .connection-status {
+    margin-left: 0.5rem;
+  }
+  
+  .connection-warning {
+    padding: 0.75rem;
+    font-size: 0.9rem;
+  }
+  
+  .voter-count {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .title {
+    flex-direction: column;
+    gap: 0.5rem;
+    text-align: center;
+  }
+  
+  .connection-status {
+    margin-left: 0;
+  }
+}
+
