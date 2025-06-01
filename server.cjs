@@ -152,8 +152,21 @@ io.on('connection', (socket) => {
     }
   })
   
-  // Handle manual reset (admin function)
-  socket.on('resetPoll', () => {
+  // Handle manual reset (admin function) - NOW WITH PASSWORD PROTECTION
+  socket.on('resetPoll', (data) => {
+    const { password } = data || {}
+    const correctPassword = 'charwednesday'
+    
+    // Log all reset attempts (for security monitoring)
+    console.log(`🔐 Poll reset attempt from ${socket.id} at ${new Date().toISOString()}`)
+    
+    if (password !== correctPassword) {
+      console.log(`❌ Invalid password attempt from ${socket.id}`)
+      socket.emit('resetError', { message: 'Invalid password. Reset denied.' })
+      return
+    }
+    
+    // Password is correct - proceed with reset
     pollState.pollData = [
       { id: 'movie', name: 'Movie', votes: 0, color: '#8884d8' },
       { id: 'game', name: 'Game', votes: 0, color: '#82ca9d' },
@@ -167,7 +180,10 @@ io.on('connection', (socket) => {
       resetTime: pollState.resetTime.getTime()
     })
     
-    console.log(`Poll manually reset by ${socket.id}`)
+    // Confirm success to the person who reset
+    socket.emit('resetSuccess', { message: 'Poll reset successfully!' })
+    
+    console.log(`✅ Poll manually reset by ${socket.id} with correct password`)
   })
   
   // Handle disconnection

@@ -88,6 +88,17 @@ export const useSocket = (): SocketHook => {
       alert(data.message)
     })
 
+    // Handle reset success/error messages
+    newSocket.on('resetSuccess', (data: { message: string }) => {
+      console.log('✅ Reset successful:', data.message)
+      alert(data.message)
+    })
+
+    newSocket.on('resetError', (data: { message: string }) => {
+      console.error('❌ Reset failed:', data.message)
+      alert(data.message)
+    })
+
     setSocket(newSocket)
 
     return () => {
@@ -108,10 +119,19 @@ export const useSocket = (): SocketHook => {
 
   const resetPoll = () => {
     if (socket && isConnected) {
-      console.log('🔄 Resetting poll')
-      socket.emit('resetPoll')
+      // Prompt for password
+      const password = prompt('Enter admin password to reset the poll:')
+      
+      if (password === null) {
+        // User cancelled
+        return
+      }
+      
+      console.log('🔄 Attempting to reset poll with password')
+      socket.emit('resetPoll', { password })
     } else {
       console.error('❌ Cannot reset: not connected')
+      alert('Not connected to server. Please refresh the page.')
     }
   }
 
