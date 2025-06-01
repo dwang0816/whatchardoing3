@@ -7,9 +7,7 @@ echo "🔨 Starting Render.com build process..."
 echo "📦 Installing dependencies..."
 npm install
 
-# Build frontend (optional, for backup)
-echo "🏗️ Building frontend..."
-npm run build || echo "⚠️ Frontend build skipped (focusing on backend)"
-
+# Skip frontend build - we only need the backend server
+echo "⚠️ Skipping frontend build (backend only deployment)"
 echo "✅ Build completed successfully!"
 echo "🚀 Ready to start Socket.IO server..." 

@@ -32,7 +32,7 @@ export const useSocket = (): SocketHook => {
     // Get server URL from environment variable or fallback
     const serverUrl = import.meta.env.VITE_SOCKET_SERVER_URL || 
                      (import.meta.env.PROD 
-                       ? 'https://whatchardoing3-backend.onrender.com' 
+                       ? 'https://whatchardoing3.onrender.com' 
                        : 'http://localhost:3001')
 
     console.log('🔌 Connecting to Socket.IO server:', serverUrl)
