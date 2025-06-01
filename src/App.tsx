@@ -1,4 +1,4 @@
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts'
 import { useSocket } from './hooks/useSocket'
 import { Clock, Users, Wifi, WifiOff } from 'lucide-react'
 
@@ -19,6 +19,19 @@ function App() {
   }
 
   const totalVotes = pollState?.pollData.reduce((sum, option) => sum + option.votes, 0) || 0
+
+  // Prepare pie chart data with better handling for zero votes
+  const pieChartData = pollState?.pollData.map(option => ({
+    ...option,
+    percentage: totalVotes > 0 ? Math.round((option.votes / totalVotes) * 100) : 0
+  })) || []
+
+  // Custom label formatter for pie chart
+  const renderCustomLabel = ({ name, votes, percentage }: { name: string, votes: number, percentage: number }) => {
+    if (votes === 0 && totalVotes === 0) return `${name}`
+    if (votes === 0) return ''
+    return `${name}: ${votes} (${percentage}%)`
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 p-4">
@@ -106,30 +119,52 @@ function App() {
               {/* Pie Chart */}
               <div className="backdrop-blur-xl bg-white/10 rounded-3xl p-6 border border-white/20">
                 <h3 className="text-xl font-bold text-white mb-4 text-center">Vote Distribution</h3>
-                <ResponsiveContainer width="100%" height={250}>
-                  <PieChart>
-                    <Pie
-                      data={pollState.pollData}
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={80}
-                      dataKey="votes"
-                      label={({ name, votes }) => `${name}: ${votes}`}
-                    >
-                      {pollState.pollData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'rgba(0,0,0,0.8)', 
-                        border: 'none', 
-                        borderRadius: '8px',
-                        color: 'white'
-                      }} 
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
+                {totalVotes === 0 ? (
+                  <div className="h-[250px] flex items-center justify-center">
+                    <div className="text-center text-purple-200">
+                      <div className="text-4xl mb-2">📊</div>
+                      <p className="text-lg font-medium">No votes yet!</p>
+                      <p className="text-sm opacity-75">Be the first to cast your vote</p>
+                    </div>
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={250}>
+                    <PieChart>
+                      <Pie
+                        data={pieChartData}
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={70}
+                        innerRadius={20}
+                        dataKey="votes"
+                        label={renderCustomLabel}
+                        labelLine={false}
+                        fontSize={12}
+                      >
+                        {pieChartData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        formatter={(value: number, name: string) => [
+                          `${value} votes (${Math.round((value / totalVotes) * 100)}%)`,
+                          name
+                        ]}
+                        contentStyle={{ 
+                          backgroundColor: 'rgba(0,0,0,0.8)', 
+                          border: 'none', 
+                          borderRadius: '8px',
+                          color: 'white'
+                        }} 
+                      />
+                      <Legend 
+                        verticalAlign="bottom" 
+                        height={36}
+                        wrapperStyle={{ color: 'white', fontSize: '12px' }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                )}
               </div>
 
               {/* Bar Chart */}
