@@ -33,12 +33,15 @@ app.use(cors({
 }))
 app.use(express.json())
 
-// Health check endpoint
+// Health check endpoint for Render.com
 app.get('/', (req, res) => {
   res.json({
     status: 'ok',
     message: 'WhatchaDoing3 Socket.IO Server',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    activeVoters: pollState.voters.size,
+    totalVotes: pollState.pollData.reduce((sum, option) => sum + option.votes, 0)
   })
 })
 
@@ -49,6 +52,11 @@ app.get('/api/poll', (req, res) => {
     voterCount: pollState.voters.size,
     resetTime: pollState.resetTime.getTime()
   })
+})
+
+// API endpoint for health checks
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'healthy' })
 })
 
 // Store current poll state in memory
@@ -169,10 +177,12 @@ io.on('connection', (socket) => {
   })
 })
 
+// Use Render.com's PORT environment variable
 const PORT = process.env.PORT || 3001
 
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Socket.IO server running on port ${PORT}`)
   console.log(`📊 Real-time poll system active`)
   console.log(`⏰ Next reset: ${pollState.resetTime.toLocaleString()}`)
+  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`)
 }) 

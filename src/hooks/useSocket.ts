@@ -1,45 +1,54 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import { io, Socket } from 'socket.io-client'
 
-interface PollData {
+export interface PollData {
   id: string
   name: string
   votes: number
   color: string
 }
 
-interface SocketData {
+export interface PollState {
   pollData: PollData[]
   hasVoted: boolean
   resetTime: number
-  voterCount?: number
 }
 
-export const useSocket = () => {
+export interface SocketHook {
+  pollState: PollState | null
+  isConnected: boolean
+  voterCount: number
+  vote: (optionId: string) => void
+  resetPoll: () => void
+}
+
+export const useSocket = (): SocketHook => {
   const [socket, setSocket] = useState<Socket | null>(null)
-  const [pollData, setPollData] = useState<PollData[]>([
-    { id: 'movie', name: 'Movie', votes: 0, color: '#8884d8' },
-    { id: 'game', name: 'Game', votes: 0, color: '#82ca9d' },
-    { id: 'friend-choose', name: 'Char', votes: 0, color: '#ffc658' }
-  ])
-  const [hasVoted, setHasVoted] = useState(false)
-  const [resetTime, setResetTime] = useState<Date>(new Date())
+  const [pollState, setPollState] = useState<PollState | null>(null)
   const [isConnected, setIsConnected] = useState(false)
   const [voterCount, setVoterCount] = useState(0)
 
   useEffect(() => {
-    // Connect to Socket.IO server
-    const serverUrl = import.meta.env.VITE_SOCKET_SERVER_URL || 'http://localhost:3001'
-    
+    // Get server URL from environment variable or fallback
+    const serverUrl = import.meta.env.VITE_SOCKET_SERVER_URL || 
+                     (import.meta.env.PROD 
+                       ? 'https://whatchardoing3-backend.onrender.com' 
+                       : 'http://localhost:3001')
+
+    console.log('🔌 Connecting to Socket.IO server:', serverUrl)
+
     const newSocket = io(serverUrl, {
-      transports: ['websocket', 'polling']
+      transports: ['websocket', 'polling'],
+      timeout: 20000,
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      forceNew: true
     })
 
-    setSocket(newSocket)
-
-    // Connection event handlers
     newSocket.on('connect', () => {
-      console.log('🔌 Connected to server')
+      console.log('✅ Connected to server')
       setIsConnected(true)
     })
 
@@ -48,65 +57,66 @@ export const useSocket = () => {
       setIsConnected(false)
     })
 
-    // Poll state handlers
-    newSocket.on('pollState', (data: SocketData) => {
+    newSocket.on('connect_error', (error) => {
+      console.error('❌ Connection error:', error)
+      setIsConnected(false)
+    })
+
+    newSocket.on('pollState', (data: PollState) => {
       console.log('📊 Received poll state:', data)
-      setPollData(data.pollData)
-      setHasVoted(data.hasVoted)
-      setResetTime(new Date(data.resetTime))
-      if (data.voterCount !== undefined) {
-        setVoterCount(data.voterCount)
-      }
+      setPollState(data)
     })
 
-    newSocket.on('pollUpdate', (data: SocketData) => {
-      console.log('⚡ Poll updated:', data)
-      setPollData(data.pollData)
-      if (data.voterCount !== undefined) {
-        setVoterCount(data.voterCount)
-      }
+    newSocket.on('pollUpdate', (data: { pollData: PollData[], voterCount: number }) => {
+      console.log('🔄 Poll updated:', data)
+      setPollState(prev => prev ? { ...prev, pollData: data.pollData } : null)
+      setVoterCount(data.voterCount)
     })
 
-    newSocket.on('pollReset', (data: SocketData) => {
+    newSocket.on('pollReset', (data: { pollData: PollData[], resetTime: number }) => {
       console.log('🔄 Poll reset:', data)
-      setPollData(data.pollData)
-      setHasVoted(false)
-      setResetTime(new Date(data.resetTime))
+      setPollState(prev => prev ? { 
+        pollData: data.pollData, 
+        hasVoted: false, 
+        resetTime: data.resetTime 
+      } : null)
       setVoterCount(0)
     })
 
-    newSocket.on('error', (error: { message: string }) => {
-      console.error('❌ Socket error:', error.message)
-      alert(error.message)
+    newSocket.on('error', (data: { message: string }) => {
+      console.error('❌ Server error:', data.message)
+      alert(data.message)
     })
 
-    // Cleanup on unmount
+    setSocket(newSocket)
+
     return () => {
-      newSocket.close()
+      console.log('🔌 Cleaning up socket connection')
+      newSocket.disconnect()
     }
   }, [])
 
-  // Vote function
-  const vote = useCallback((optionId: string) => {
-    if (socket && !hasVoted) {
+  const vote = (optionId: string) => {
+    if (socket && isConnected) {
       console.log('🗳️ Voting for:', optionId)
       socket.emit('vote', { optionId })
-      setHasVoted(true)
+    } else {
+      console.error('❌ Cannot vote: not connected')
+      alert('Not connected to server. Please refresh the page.')
     }
-  }, [socket, hasVoted])
+  }
 
-  // Reset function
-  const resetPoll = useCallback(() => {
-    if (socket) {
+  const resetPoll = () => {
+    if (socket && isConnected) {
       console.log('🔄 Resetting poll')
       socket.emit('resetPoll')
+    } else {
+      console.error('❌ Cannot reset: not connected')
     }
-  }, [socket])
+  }
 
   return {
-    pollData,
-    hasVoted,
-    resetTime,
+    pollState,
     isConnected,
     voterCount,
     vote,
