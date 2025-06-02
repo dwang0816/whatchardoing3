@@ -245,9 +245,37 @@ io.on('connection', (socket) => {
 // Use Render.com's PORT environment variable
 const PORT = process.env.PORT || 3001
 
-server.listen(PORT, '0.0.0.0', () => {
+// Add error handling for server startup
+server.listen(PORT, '0.0.0.0', (err) => {
+  if (err) {
+    console.error('❌ Failed to start server:', err)
+    process.exit(1)
+  }
+  
   console.log(`🚀 Socket.IO server running on port ${PORT}`)
   console.log(`📊 Real-time poll system active`)
   console.log(`⏰ Next reset: ${pollState.resetTime.toLocaleString()}`)
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`)
+  console.log(`🔗 Server URL: http://0.0.0.0:${PORT}`)
+})
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (err) => {
+  console.error('❌ Uncaught Exception:', err)
+  process.exit(1)
+})
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason)
+  process.exit(1)
+})
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('💤 SIGTERM received, shutting down gracefully')
+  server.close(() => {
+    console.log('✅ Server closed')
+    process.exit(0)
+  })
 }) 

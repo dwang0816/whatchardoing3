@@ -1,11 +1,13 @@
 services:
   - type: web
     name: whatchardoing3-backend
-    env: node
-    buildCommand: npm install
+    runtime: node
+    buildCommand: npm ci --only=production
     startCommand: node server.cjs
+    healthCheckPath: /health
     envVars:
       - key: NODE_ENV
         value: production
-      - key: SKIP_FRONTEND_BUILD
-        value: "true" 
+      - key: PORT
+        value: 10000
+    plan: free 
