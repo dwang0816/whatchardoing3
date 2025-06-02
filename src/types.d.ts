@@ -8,10 +8,17 @@ declare module 'react' {
     interface FormEvent {
       preventDefault(): void;
     }
+    interface ChangeEvent<T = Element> {
+      target: T & { value: string };
+    }
     
     function useState<S>(initialState: S | (() => S)): [S, (value: S | ((prev: S) => S)) => void];
     function useEffect(effect: () => void | (() => void), deps?: any[]): void;
+    
+    const StrictMode: any;
   }
+  
+  export const StrictMode: any;
 }
 
 declare module 'react-dom/client' {
@@ -28,11 +35,28 @@ declare module 'react/jsx-runtime' {
 }
 
 declare module 'vite' {
-  export function defineConfig(config: any): any;
+  interface UserConfig {
+    plugins?: any[];
+    [key: string]: any;
+  }
+  export function defineConfig(config: UserConfig | (() => UserConfig)): UserConfig;
+  export = Vite;
+  export as namespace Vite;
 }
 
 declare module '@vitejs/plugin-react' {
-  export default function react(options?: any): any;
+  interface PluginOptions {
+    [key: string]: any;
+  }
+  function react(options?: PluginOptions): any;
+  export default react;
+  export = ViteReact;
+  export as namespace ViteReact;
+}
+
+declare module '*.css' {
+  const content: any;
+  export default content;
 }
 
 declare namespace JSX {

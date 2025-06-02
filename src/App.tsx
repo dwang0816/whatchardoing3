@@ -291,7 +291,7 @@ function App() {
                     <input
                       type="text"
                       value={newComment}
-                      onChange={(e) => setNewComment(e.target.value)}
+                      onChange={(e: { target: { value: string } }) => setNewComment(e.target.value)}
                       placeholder="Share your thoughts or suggestions..."
                       disabled={!isConnected}
                       className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:opacity-50"
