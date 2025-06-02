@@ -24,7 +24,7 @@ function App() {
     return `${days}d ${hours}h ${minutes}m`
   }
 
-  const handleCommentSubmit = (e: React.FormEvent) => {
+  const handleCommentSubmit = (e: { preventDefault: () => void }) => {
     e.preventDefault()
     if (newComment.trim() && isConnected) {
       console.log('📝 Submitting comment:', newComment.trim())
