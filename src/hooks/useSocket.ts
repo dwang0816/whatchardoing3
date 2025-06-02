@@ -77,13 +77,13 @@ export const useSocket = (): SocketHook => {
 
     newSocket.on('pollUpdate', (data: { pollData: PollData[], voterCount: number }) => {
       console.log('🔄 Poll updated:', data)
-      setPollState(prev => prev ? { ...prev, pollData: data.pollData } : null)
+      setPollState((prev: PollState | null) => prev ? { ...prev, pollData: data.pollData } : null)
       setVoterCount(data.voterCount)
     })
 
     newSocket.on('pollReset', (data: { pollData: PollData[], resetTime: number }) => {
       console.log('🔄 Poll reset:', data)
-      setPollState(prev => prev ? { 
+      setPollState((prev: PollState | null) => prev ? { 
         pollData: data.pollData, 
         hasVoted: false, 
         resetTime: data.resetTime 
@@ -100,7 +100,7 @@ export const useSocket = (): SocketHook => {
 
     newSocket.on('commentAdded', (comment: Comment) => {
       console.log('💬 New comment added:', comment)
-      setComments(prev => [...prev, comment])
+      setComments((prev: Comment[]) => [...prev, comment])
     })
 
     newSocket.on('error', (data: { message: string }) => {
