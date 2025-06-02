@@ -10,4 +10,9 @@ services:
         value: production
       - key: PORT
         value: 10000
-    plan: free 
+      - key: npm_config_user_config
+        value: /dev/null
+      - key: npm_config_cache
+        value: /tmp/.npm
+    plan: free
+    autoDeploy: false 

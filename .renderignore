@@ -1,25 +1,38 @@
-# Frontend files - not needed for backend deployment
+# Frontend source code
 src/
 public/
 dist/
-vite.config.ts
+
+# Build outputs
+.vite/
+node_modules/.vite/
+node_modules/.cache/
+
+# Configuration files
+vite.config.*
 vite-env.d.ts
-tsconfig.json
-tsconfig.app.json
-tsconfig.node.json
-netlify.toml
+tsconfig*.json
+tailwind.config.*
+postcss.config.*
 index.html
 
-# Build artifacts
-node_modules/.cache/
-node_modules/.vite/
-node_modules/.tmp/
+# Frontend deployment
+netlify.toml
 
 # Development files
-.vite/
 .env.local
 .env.development
+*.log
 
-# Frontend dependencies that aren't needed for backend
-tailwind.config.js
-postcss.config.js 
+# IDE files
+.vscode/
+.idea/
+
+# Frontend dependencies that might be cached
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Any remaining frontend build artifacts
+*.d.ts
+*.map 
