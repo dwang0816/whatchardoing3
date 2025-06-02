@@ -2,7 +2,7 @@ services:
   - type: web
     name: whatchardoing3-backend
     runtime: node
-    buildCommand: cp package.production.json package.json && npm install
+    buildCommand: "chmod +x build-backend.sh && ./build-backend.sh"
     startCommand: node server.cjs
     healthCheckPath: /health
     envVars:
