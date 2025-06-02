@@ -33,6 +33,70 @@ function App() {
     return `${name}: ${votes} (${percentage}%)`
   }
 
+  // Custom tooltip for pie chart with dynamic colors
+  const CustomPieTooltip = ({ active, payload }: { active?: boolean, payload?: Array<{ payload: { name: string, votes: number, color: string } }> }) => {
+    if (active && payload && payload[0]) {
+      const data = payload[0].payload
+      const color = data.color
+      return (
+        <div
+          style={{
+            backgroundColor: `${color}90`, // 90% opacity - much more visible!
+            backdropFilter: 'blur(10px)',
+            border: `2px solid white`, // White border for contrast
+            borderRadius: '12px',
+            padding: '10px 14px',
+            color: 'white',
+            boxShadow: `0 8px 32px ${color}60, 0 0 0 1px ${color}`, // Stronger shadow + glow
+            fontSize: '14px',
+            fontWeight: 'medium',
+            minWidth: '120px'
+          }}
+        >
+          <div style={{ color: 'white', fontWeight: 'bold', marginBottom: '4px', textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
+            {data.name}
+          </div>
+          <div style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>
+            {data.votes} votes ({Math.round((data.votes / totalVotes) * 100)}%)
+          </div>
+        </div>
+      )
+    }
+    return null
+  }
+
+  // Custom tooltip for bar chart with dynamic colors
+  const CustomBarTooltip = ({ active, payload }: { active?: boolean, payload?: Array<{ payload: { name: string, votes: number, color: string } }> }) => {
+    if (active && payload && payload[0]) {
+      const data = payload[0].payload
+      const color = data.color
+      return (
+        <div
+          style={{
+            backgroundColor: `${color}90`, // 90% opacity - much more visible!
+            backdropFilter: 'blur(10px)',
+            border: `2px solid white`, // White border for contrast
+            borderRadius: '12px',
+            padding: '10px 14px',
+            color: 'white',
+            boxShadow: `0 8px 32px ${color}60, 0 0 0 1px ${color}`, // Stronger shadow + glow
+            fontSize: '14px',
+            fontWeight: 'medium',
+            minWidth: '120px'
+          }}
+        >
+          <div style={{ color: 'white', fontWeight: 'bold', marginBottom: '4px', textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
+            {data.name}
+          </div>
+          <div style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>
+            {data.votes} votes
+          </div>
+        </div>
+      )
+    }
+    return null
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 p-4">
       <div className="max-w-6xl mx-auto">
@@ -146,16 +210,7 @@ function App() {
                         ))}
                       </Pie>
                       <Tooltip 
-                        formatter={(value: number, name: string) => [
-                          `${value} votes (${Math.round((value / totalVotes) * 100)}%)`,
-                          name
-                        ]}
-                        contentStyle={{ 
-                          backgroundColor: 'rgba(0,0,0,0.8)', 
-                          border: 'none', 
-                          borderRadius: '8px',
-                          color: 'white'
-                        }} 
+                        content={<CustomPieTooltip />}
                       />
                       <Legend 
                         verticalAlign="bottom" 
@@ -183,12 +238,7 @@ function App() {
                       axisLine={{ stroke: 'rgba(255,255,255,0.3)' }}
                     />
                     <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'rgba(0,0,0,0.8)', 
-                        border: 'none', 
-                        borderRadius: '8px',
-                        color: 'white'
-                      }} 
+                      content={<CustomBarTooltip />}
                     />
                     <Bar dataKey="votes" radius={[4, 4, 0, 0]}>
                       {pollState.pollData.map((entry, index) => (
