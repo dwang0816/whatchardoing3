@@ -2,7 +2,7 @@ services:
   - type: web
     name: whatchardoing3-backend
     runtime: node
-    buildCommand: npm ci --only=production
+    buildCommand: cp package.production.json package.json && npm install
     startCommand: node server.cjs
     healthCheckPath: /health
     envVars:
