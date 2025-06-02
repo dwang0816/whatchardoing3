@@ -14,12 +14,19 @@ export interface PollState {
   resetTime: number
 }
 
+export interface Comment {
+  text: string
+  timestamp: number
+}
+
 export interface SocketHook {
   pollState: PollState | null
   isConnected: boolean
   voterCount: number
+  comments: Comment[]
   vote: (optionId: string) => void
   resetPoll: () => void
+  addComment: (text: string) => void
 }
 
 export const useSocket = (): SocketHook => {
@@ -27,6 +34,7 @@ export const useSocket = (): SocketHook => {
   const [pollState, setPollState] = useState<PollState | null>(null)
   const [isConnected, setIsConnected] = useState(false)
   const [voterCount, setVoterCount] = useState(0)
+  const [comments, setComments] = useState<Comment[]>([])
 
   useEffect(() => {
     // Get server URL from environment variable or fallback
@@ -81,6 +89,18 @@ export const useSocket = (): SocketHook => {
         resetTime: data.resetTime 
       } : null)
       setVoterCount(0)
+      // Clear comments when poll resets
+      setComments([])
+    })
+
+    newSocket.on('comments', (data: Comment[]) => {
+      console.log('💬 Received comments:', data)
+      setComments(data)
+    })
+
+    newSocket.on('commentAdded', (comment: Comment) => {
+      console.log('💬 New comment added:', comment)
+      setComments(prev => [...prev, comment])
     })
 
     newSocket.on('error', (data: { message: string }) => {
@@ -135,11 +155,23 @@ export const useSocket = (): SocketHook => {
     }
   }
 
+  const addComment = (text: string) => {
+    if (socket && isConnected) {
+      console.log('💬 Adding comment:', text)
+      socket.emit('addComment', { text })
+    } else {
+      console.error('❌ Cannot add comment: not connected')
+      alert('Not connected to server. Please refresh the page.')
+    }
+  }
+
   return {
     pollState,
     isConnected,
     voterCount,
+    comments,
     vote,
-    resetPoll
+    resetPoll,
+    addComment
   }
 } 

@@ -41,7 +41,8 @@ app.get('/', (req, res) => {
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
     activeVoters: pollState.voters.size,
-    totalVotes: pollState.pollData.reduce((sum, option) => sum + option.votes, 0)
+    totalVotes: pollState.pollData.reduce((sum, option) => sum + option.votes, 0),
+    commentsCount: pollState.comments.length
   })
 })
 
@@ -51,6 +52,14 @@ app.get('/api/poll', (req, res) => {
     pollData: pollState.pollData,
     voterCount: pollState.voters.size,
     resetTime: pollState.resetTime.getTime()
+  })
+})
+
+// API endpoint to get comments for debugging
+app.get('/api/comments', (req, res) => {
+  res.json({
+    comments: pollState.comments,
+    count: pollState.comments.length
   })
 })
 
@@ -67,7 +76,8 @@ let pollState = {
     { id: 'friend-choose', name: 'Char', votes: 0, color: '#ffc658' }
   ],
   voters: new Set(), // Track unique voters by socket ID
-  resetTime: null
+  resetTime: null,
+  comments: [] // Store comments/suggestions
 }
 
 // Function to get next Thursday midnight EST
@@ -100,6 +110,7 @@ const checkAndResetPoll = () => {
       { id: 'friend-choose', name: 'Char', votes: 0, color: '#ffc658' }
     ]
     pollState.voters.clear()
+    pollState.comments = [] // Clear comments on auto-reset
     pollState.resetTime = getNextThursdayMidnightEST()
     
     // Broadcast reset to all clients
@@ -125,6 +136,10 @@ io.on('connection', (socket) => {
     hasVoted: pollState.voters.has(socket.id),
     resetTime: pollState.resetTime.getTime()
   })
+
+  // Send current comments to new user
+  console.log(`💬 Sending ${pollState.comments.length} comments to ${socket.id}`)
+  socket.emit('comments', pollState.comments)
   
   // Handle voting
   socket.on('vote', (data) => {
@@ -151,6 +166,39 @@ io.on('connection', (socket) => {
       console.log(`Vote received for ${option.name} from ${socket.id}`)
     }
   })
+
+  // Handle adding comments
+  socket.on('addComment', (data) => {
+    console.log(`💬 Received comment request from ${socket.id}:`, data)
+    const { text } = data
+    
+    // Validate comment
+    if (!text || typeof text !== 'string' || text.trim().length === 0) {
+      socket.emit('error', { message: 'Comment cannot be empty' })
+      return
+    }
+    
+    if (text.length > 500) {
+      socket.emit('error', { message: 'Comment too long (max 500 characters)' })
+      return
+    }
+    
+    // Create comment object
+    const comment = {
+      text: text.trim(),
+      timestamp: Date.now()
+    }
+    
+    // Add to comments array
+    pollState.comments.push(comment)
+    console.log(`💬 Comment stored. Total comments: ${pollState.comments.length}`)
+    
+    // Broadcast new comment to all clients
+    io.emit('commentAdded', comment)
+    console.log(`💬 Broadcasted comment to all clients`)
+    
+    console.log(`💬 Comment added from ${socket.id}: "${comment.text}"`)
+  })
   
   // Handle manual reset (admin function) - NOW WITH PASSWORD PROTECTION
   socket.on('resetPoll', (data) => {
@@ -173,6 +221,7 @@ io.on('connection', (socket) => {
       { id: 'friend-choose', name: 'Char', votes: 0, color: '#ffc658' }
     ]
     pollState.voters.clear()
+    pollState.comments = [] // Clear comments on manual reset
     
     // Broadcast reset to all clients
     io.emit('pollReset', {
